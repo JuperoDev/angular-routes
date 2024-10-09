@@ -1,12 +1,74 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-
+import { MatIconModule } from '@angular/material/icon';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatCardModule } from '@angular/material/card';
+import { TaskComponent } from './task/task.component';
+import { Task } from './task/task';
+import { DragDropModule, CdkDragDrop, transferArrayItem } from '@angular/cdk/drag-drop';
+import { MatButtonModule } from '@angular/material/button';
+import { TaskDialogResult } from './task-dialog/task-dialog.component';
+import { TaskDialogComponent } from './task-dialog/task-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html',  // External HTML file for the AppComponent
-  styleUrls: ['./app.component.css'],    // Use external styles (if any)
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
   standalone: true,
-  imports: [RouterModule, CommonModule],
+  imports: [
+    DragDropModule,
+    RouterModule,
+    CommonModule,
+    MatIconModule,
+    MatToolbarModule,
+    MatCardModule,
+    TaskComponent, MatButtonModule, TaskDialogComponent
+  ]
 })
-export class AppComponent {}
+export class AppComponent {
+  todo: Task[] = [
+    { id: 1, title: 'Learn Angular', description: 'Study the basics of Angular', completed: false },
+    { id: 2, title: 'Build a Todo App', description: 'Create a simple Kanban app', completed: false },
+  ];
+  inProgress: Task[] = [];
+  done: Task[] = [];
+
+  constructor(private dialog: MatDialog) {}
+
+  newTask(): void {
+    const dialogRef = this.dialog.open(TaskDialogComponent, {
+      width: '270px',
+      data: {
+        task: {},
+      },
+    });
+    dialogRef
+      .afterClosed()
+      .subscribe((result: TaskDialogResult|undefined) => {
+        if (!result) {
+          return;
+        }
+        this.todo.push(result.task);
+      });
+  }
+
+  // Add the `editTask` method to handle task edits
+  editTask(list: string, task: Task) {
+    console.log(`Editing task in the ${list} list:`, task);
+    // Implement your logic to handle editing the task here
+    // For example, you can open a modal, change the task data, or update the status
+  }
+
+  drop(event: CdkDragDrop<Task[]>): void {
+    if (event.previousContainer === event.container) {
+      return;
+    }
+    transferArrayItem(
+      event.previousContainer.data,
+      event.container.data,
+      event.previousIndex,
+      event.currentIndex
+    );
+  }
+}
